@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { fade, fly, scale } from 'svelte/transition';
 	import { NoTodos } from '../components/index';
 	import '../css/reset.css';
 	import '../css/style.css';
@@ -20,7 +21,6 @@
 	}
 
 	function addTodo() {
-
 		todos = [
 			...todos,
 			{
@@ -89,8 +89,8 @@
 
 		{#if todos.length > 0}
 			<ul class="todo-list">
-				{#each filteredTodos as todo}
-					<li class="todo-item-container">
+				{#each filteredTodos as todo (todo.id)}
+					<li class="todo-item-container" transition:fade={{duration: 300}}>
 						<div class="todo-item">
 							<input type="checkbox" bind:checked={todo.isComplete} />
 							{#if !todo.isEditing}
@@ -100,6 +100,7 @@
 									class:line-through={todo.isComplete}>{todo.title}</span
 								>
 							{:else}
+								<!-- svelte-ignore a11y-autofocus -->
 								<input
 									type="text"
 									class="todo-item-input"
@@ -129,7 +130,14 @@
 					<button on:click={checkAllTodos} class="button">Check All</button>
 				</div>
 
-				<span>{remainingTodos} items remaining</span>
+				<div>
+					{#key remainingTodos}
+						<span style="display: inline-block" in:fly={{ y: -20 }}>
+							{remainingTodos}
+						</span>
+					{/key}
+					<span>items remaining</span>
+				</div>
 			</div>
 
 			<div class="other-buttons-container">
@@ -161,7 +169,7 @@
 				</div>
 			</div>
 		{:else}
-			<NoTodos />
+			<NoTodos/>
 		{/if}
 	</div>
 </div>
