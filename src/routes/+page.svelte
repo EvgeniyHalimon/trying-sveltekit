@@ -1,11 +1,10 @@
 <script lang="ts">
 	import { fade, fly, scale } from 'svelte/transition';
-	import { NoTodos } from '../components/index';
+	import { NoTodos, TodoForm } from '../components/index';
 	import '../css/reset.css';
 	import '../css/style.css';
 	import type { ITodoList } from '../types';
 
-	let todoTitle = '';
 	let todos: ITodoList[] = [];
 	let currentFilter = 'all';
 
@@ -20,18 +19,16 @@
 		console.log('🚀 ~ file: +page.svelte:10 ~ todos:', todos);
 	}
 
-	function addTodo() {
+	function addTodo(event: CustomEvent<{todoTitle: string}>) {
 		todos = [
 			...todos,
 			{
 				id: todos.length + 1,
-				title: todoTitle,
+				title: event.detail.todoTitle,
 				isComplete: false,
 				isEditing: false
 			}
 		];
-
-		todoTitle = '';
 	}
 
 	function deleteTodo(id: number): any {
@@ -78,14 +75,7 @@
 <div class="todo-app-container">
 	<div class="todo-app">
 		<h2>Todo App</h2>
-		<form action="#" on:submit|preventDefault={addTodo}>
-			<input
-				type="text"
-				class="todo-input"
-				placeholder="What do you need to do?"
-				bind:value={todoTitle}
-			/>
-		</form>
+		<TodoForm on:todoAdded={addTodo}/>
 
 		{#if todos.length > 0}
 			<ul class="todo-list">
