@@ -1,50 +1,72 @@
 <script lang="ts">
 	import { fade, fly } from 'svelte/transition';
 	import type { ITodoList } from '../types';
-	import { createEventDispatcher } from 'svelte';
-	export let filteredTodos: ITodoList[];
-	export let remainingTodos: number;
-	export let currentFilter: string;
+    import { todos } from '../stores/TodosStore'
 
-	const dispatch = createEventDispatcher();
+   /*  let todosValue: ITodoList[];
+    const unsubscribe = todos.subscribe((value) => (todosValue = value))
+    onDestroy(unsubscribe)
+    
+    instead we can use $todos in code
+    */
+
+	
+	let remainingTodos: number;
+	let currentFilter: string = 'all';
+
+    $: filteredTodos =
+		currentFilter === 'all'
+			? $todos
+			: currentFilter === 'active'
+			? $todos.filter((todo) => !todo.isComplete)
+			: $todos.filter((todo) => todo.isComplete);
+
+    $: remainingTodos = $todos.filter((todo: ITodoList) => !todo.isComplete).length;
+
 	function checkAllTodos() {
-		dispatch('checkAllTodosDispatched');
-	}
+        todos.update((todos) => 
+        todos.map((todo) => {
+			todo.isComplete = true;
+			return todo;
+		})
+	)}
 
 	function clearCompleted() {
-		dispatch('clearCompletedTodos');
+		todos.update((todos) => todos.filter((todo: ITodoList) => !todo.isComplete))
 	}
 
+	let beforeEditCache = '';
 	function editTodo(todo: ITodoList) {
-        dispatch('editTodoDispatched',{
-            todo
-        });
-    }
+		beforeEditCache = todo.title;
+		todo.isEditing = true;
+		$todos = $todos;
+	}
 
 	function doneEdit(todo: ITodoList) {
-        dispatch('doneEditDispatched',{
-            todo
-        });
-    }
+		if (todo.title.trim().length === 0) {
+			todo.title = beforeEditCache;
+		}
+		todo.isEditing = false;
+		$todos = $todos;
+	}
 
-	function doneEditKeydown(event: KeyboardEvent, todo: ITodoList) {
-        dispatch('doneEditKeydownDispatched',{
-            key: event.key,
-            todo
-        });
-    }
+	function doneEditKeydown(key: string, todo: ITodoList) {
+		if (key === 'Enter') {
+			doneEdit(todo);
+		}
+		if (key === 'Escape') {
+			todo.title = beforeEditCache;
+			doneEdit(todo);
+		}
+	}
 
 	function deleteTodo(id: number) {
-        dispatch('deleteTodoDispatched', {
-            id
-        });
+        todos.update((todos) => todos.filter((todo: ITodoList) => todo.id !== id))
     }
 
-    function updateFilter(filter: string) {
-        dispatch('updateFilterDispatched', {
-            filter
-        });
-    }
+    function updateFilter(filter: string){
+		currentFilter = filter;
+	}
 </script>
 
 <div>
@@ -70,7 +92,7 @@
 							class="todo-item-input"
 							bind:value={todo.title}
 							on:blur={() => doneEdit(todo)}
-							on:keydown={(event) => doneEditKeydown(event, todo)}
+							on:keydown={(e) => doneEditKeydown(e.key, todo)}
 							autofocus
 						/>
 					{/if}

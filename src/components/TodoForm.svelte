@@ -1,13 +1,20 @@
 <script lang="ts">
-	import { createEventDispatcher } from "svelte";
-
+    import { todos } from '../stores/TodosStore'
     let todoTitle: string
-    const dispatch = createEventDispatcher<{todoAdded: {todoTitle: string}}>()
     function addTodo() {
-        dispatch("todoAdded",{
-            todoTitle
-        })
-		todoTitle = '';
+       todos.update(todos => {
+        return [
+			   ...todos,
+			   {
+				   id: todos.length + 1,
+				   title: todoTitle,
+				   isComplete: false,
+				   isEditing: false
+			   }
+		   ];
+       })
+
+       todoTitle = ''
 	}
 </script>
 
